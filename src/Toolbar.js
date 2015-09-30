@@ -194,13 +194,18 @@ L.Toolbar = L.Class.extend({
 
 			li = L.DomUtil.create('li', '', container);
 
-			button = this._createButton({
-				title: buttons[i].title,
-				text: buttons[i].text,
-				container: li,
-				callback: buttons[i].callback,
-				context: buttons[i].context
-			});
+
+			if (buttons[i].ownElement) {
+				button = buttons[i].ownElement;
+				li.appendChild(button);
+			} else
+				button = this._createButton({
+					title: buttons[i].title,
+					text: buttons[i].text,
+					container: li,
+					callback: buttons[i].callback,
+					context: buttons[i].context
+				});
 
 			this._actionButtons.push({
 				button: button,
