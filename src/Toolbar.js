@@ -198,7 +198,7 @@ L.Toolbar = L.Class.extend({
 			if (buttons[i].ownElement) {
 				button = buttons[i].ownElement;
 				li.appendChild(button);
-			} else
+			} else {
 				button = this._createButton({
 					title: buttons[i].title,
 					text: buttons[i].text,
@@ -206,6 +206,7 @@ L.Toolbar = L.Class.extend({
 					callback: buttons[i].callback,
 					context: buttons[i].context
 				});
+			}
 
 			this._actionButtons.push({
 				button: button,

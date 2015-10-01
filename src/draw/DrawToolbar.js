@@ -64,11 +64,11 @@ L.DrawToolbar = L.Toolbar.extend({
 				var typeName = toolName[0].toUpperCase() + toolName.substring(1);
 				if (L.Draw[typeName]) {
 					
-					var type = L.Draw[typeName];
+					var Type = L.Draw[typeName];
 
 					modeHandlers.push({
 						enabled: this.options[toolName],
-						handler: new type(map, this.options[toolName]),
+						handler: new Type(map, this.options[toolName]),
 						title: L.drawLocal.draw.toolbar.buttons[toolName]
 					});
 				}
@@ -102,8 +102,9 @@ L.DrawToolbar = L.Toolbar.extend({
 		if (handler.getActions) {
 			// if handler has own custom actions
 			var customActions = handler.getActions();
-			if (customActions)
+			if (customActions) {
 				actions.unshift.apply(actions, customActions);
+			}
 		}
 
 		return actions;
