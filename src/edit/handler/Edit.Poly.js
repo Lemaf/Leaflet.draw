@@ -9,7 +9,10 @@ L.Edit.Poly = L.Handler.extend({
 		icon: new L.DivIcon({
 			iconSize: new L.Point(8, 8),
 			className: 'leaflet-div-icon leaflet-editing-icon'
-		})
+		}),
+
+		threshould: 10,
+		tolerance: 30
 	},
 
 	initialize: function (poly, options) {
@@ -31,6 +34,8 @@ L.Edit.Poly = L.Handler.extend({
 				this._initMarkers();
 			}
 			this._poly._map.addLayer(this._markerGroup);
+
+			this._poly._map.on('moveend', this.updateMarkers, this);
 		}
 	},
 
@@ -40,6 +45,7 @@ L.Edit.Poly = L.Handler.extend({
 		poly.setStyle(poly.options.original);
 
 		if (poly._map) {
+			poly._map.off('moveend', this.updateMarkers, this);
 			poly._map.removeLayer(this._markerGroup);
 			delete this._markerGroup;
 			delete this._markers;
@@ -62,22 +68,68 @@ L.Edit.Poly = L.Handler.extend({
 
 		// TODO refactor holes implementation in Polygon to support it here
 
+		var bounds = this._poly._map.getBounds(), map = this._poly._map;
+		var simplify =  map.getZoom() < map.getMaxZoom();
+		var points = [], point;
+
 		for (i = 0, len = latlngs.length; i < len; i++) {
 
+			if (bounds.contains(latlngs[i])) {
+				// point = map.project(latlngs[i]);
+				// point._index = i;
+				// points.push(point);
+				points.push(i);
+			}
+		}
+		
+		if (simplify) {
+
+			points = points.map(function (i) {
+				point = map.project(latlngs[i]);
+				point._index = i;
+				return point;
+			});
+
+			var tolerance = this.options.tolerance, limit = 10;
+
+			for (i = 0; i < limit && points.length > this.options.threshould; i++, tolerance += 5) {
+				points = L.LineUtil.simplify(points, tolerance);
+			}
+
+			points = points.map(function (point) {
+				return point._index;
+			});
+		}
+
+		for (j = 0; j < points.length; j++) {
+			i = points[j];
 			marker = this._createMarker(latlngs[i], i);
 			marker.on('click', this._onMarkerClick, this);
-			this._markers.push(marker);
+			this._markers[i] = marker;
 		}
+
 
 		var markerLeft, markerRight;
 
 		for (i = 0, j = len - 1; i < len; j = i++) {
-			if (i === 0 && !(L.Polygon && (this._poly instanceof L.Polygon))) {
+			if (!this._markers[i] || (i === 0 && !(L.Polygon && (this._poly instanceof L.Polygon)))) {
 				continue;
 			}
 
 			markerLeft = this._markers[j];
 			markerRight = this._markers[i];
+
+			if (!markerLeft) {
+				markerLeft = this._createMarker(latlngs[j], j);
+				markerLeft.on('click', this._onMarkerClick, this);
+				this._markers[j] = markerLeft;
+			}
+
+			if (!markerRight) {
+				markerRight = this._createMarker(latlngs[i], i);
+				markerRight.on('click', this._onMarkerClick, this);
+				this._markers[i] = markerRight;
+			}
 
 			this._createMiddleMarker(markerLeft, markerRight);
 			this._updatePrevNext(markerLeft, markerRight);
