@@ -172,8 +172,8 @@ L.Toolbar = L.Class.extend({
 
 	_createActions: function (handler) {
 		var container = this._actionsContainer,
-			buttons = this.getActions(handler),
-			l = buttons.length,
+			actions = this.getActions(handler),
+			l = actions.length,
 			li, di, dl, button;
 
 		// Dispose the actions toolbar (todo: dispose only not used buttons)
@@ -188,29 +188,29 @@ L.Toolbar = L.Class.extend({
 		}
 
 		for (var i = 0; i < l; i++) {
-			if ('enabled' in buttons[i] && !buttons[i].enabled) {
+			if ('enabled' in actions[i] && !actions[i].enabled) {
 				continue;
 			}
 
 			li = L.DomUtil.create('li', '', container);
 
 
-			if (buttons[i].ownElement) {
-				button = buttons[i].ownElement;
+			if (actions[i].ownElement) {
+				button = actions[i].ownElement;
 				li.appendChild(button);
 			} else {
 				button = this._createButton({
-					title: buttons[i].title,
-					text: buttons[i].text,
+					title: actions[i].title,
+					text: actions[i].text,
 					container: li,
-					callback: buttons[i].callback,
-					context: buttons[i].context
+					callback: actions[i].callback,
+					context: actions[i].context
 				});
 			}
 
 			this._actionButtons.push({
 				button: button,
-				callback: buttons[i].callback
+				callback: actions[i].callback
 			});
 		}
 	},

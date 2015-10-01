@@ -2296,8 +2296,8 @@ L.Toolbar = L.Class.extend({
 
 	_createActions: function (handler) {
 		var container = this._actionsContainer,
-			buttons = this.getActions(handler),
-			l = buttons.length,
+			actions = this.getActions(handler),
+			l = actions.length,
 			li, di, dl, button;
 
 		// Dispose the actions toolbar (todo: dispose only not used buttons)
@@ -2312,29 +2312,29 @@ L.Toolbar = L.Class.extend({
 		}
 
 		for (var i = 0; i < l; i++) {
-			if ('enabled' in buttons[i] && !buttons[i].enabled) {
+			if ('enabled' in actions[i] && !actions[i].enabled) {
 				continue;
 			}
 
 			li = L.DomUtil.create('li', '', container);
 
 
-			if (buttons[i].ownElement) {
-				button = buttons[i].ownElement;
+			if (actions[i].ownElement) {
+				button = actions[i].ownElement;
 				li.appendChild(button);
 			} else {
 				button = this._createButton({
-					title: buttons[i].title,
-					text: buttons[i].text,
+					title: actions[i].title,
+					text: actions[i].text,
 					container: li,
-					callback: buttons[i].callback,
-					context: buttons[i].context
+					callback: actions[i].callback,
+					context: actions[i].context
 				});
 			}
 
 			this._actionButtons.push({
 				button: button,
-				callback: buttons[i].callback
+				callback: actions[i].callback
 			});
 		}
 	},
@@ -2469,33 +2469,6 @@ L.DrawToolbar = L.Toolbar.extend({
 	},
 
 	getModeHandlers: function (map) {
-		// return [
-		// 	{
-		// 		enabled: this.options.polyline,
-		// 		handler: new L.Draw.Polyline(map, this.options.polyline),
-		// 		title: L.drawLocal.draw.toolbar.buttons.polyline
-		// 	},
-		// 	{
-		// 		enabled: this.options.polygon,
-		// 		handler: new L.Draw.Polygon(map, this.options.polygon),
-		// 		title: L.drawLocal.draw.toolbar.buttons.polygon
-		// 	},
-		// 	{
-		// 		enabled: this.options.rectangle,
-		// 		handler: new L.Draw.Rectangle(map, this.options.rectangle),
-		// 		title: L.drawLocal.draw.toolbar.buttons.rectangle
-		// 	},
-		// 	{
-		// 		enabled: this.options.circle,
-		// 		handler: new L.Draw.Circle(map, this.options.circle),
-		// 		title: L.drawLocal.draw.toolbar.buttons.circle
-		// 	},
-		// 	{
-		// 		enabled: this.options.marker,
-		// 		handler: new L.Draw.Marker(map, this.options.marker),
-		// 		title: L.drawLocal.draw.toolbar.buttons.marker
-		// 	}
-		// ];
 		
 		// dynamic
 		
