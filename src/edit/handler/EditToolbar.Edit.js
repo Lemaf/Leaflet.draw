@@ -99,6 +99,12 @@ L.EditToolbar.Edit = L.Handler.extend({
 		this._map.fire('draw:edited', {layers: editedLayers});
 	},
 
+	setFeatureGroup: function (featureGroup) {
+		if (!this.enabled()) {
+			this._featureGroup = featureGroup;
+		}
+	},
+
 	_backupLayer: function (layer) {
 		var id = L.Util.stamp(layer);
 

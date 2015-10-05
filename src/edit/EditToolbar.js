@@ -47,23 +47,29 @@ L.EditToolbar = L.Toolbar.extend({
 
 	getModeHandlers: function (map) {
 		var featureGroup = this.options.featureGroup;
-		return [
-			{
-				enabled: this.options.edit,
-				handler: new L.EditToolbar.Edit(map, {
-					featureGroup: featureGroup,
-					selectedPathOptions: this.options.edit.selectedPathOptions
-				}),
-				title: L.drawLocal.edit.toolbar.buttons.edit
-			},
-			{
-				enabled: this.options.remove,
-				handler: new L.EditToolbar.Delete(map, {
-					featureGroup: featureGroup
-				}),
-				title: L.drawLocal.edit.toolbar.buttons.remove
-			}
-		];
+
+		// need change in future
+		if (!this._modeHandlers) {
+			this._modeHandlers = [
+				{
+					enabled: this.options.edit,
+					handler: new L.EditToolbar.Edit(map, {
+						featureGroup: featureGroup,
+						selectedPathOptions: this.options.edit.selectedPathOptions
+					}),
+					title: L.drawLocal.edit.toolbar.buttons.edit
+				},
+				{
+					enabled: this.options.remove,
+					handler: new L.EditToolbar.Delete(map, {
+						featureGroup: featureGroup
+					}),
+					title: L.drawLocal.edit.toolbar.buttons.remove
+				}
+			];
+		}
+
+		return this._modeHandlers;
 	},
 
 	getActions: function () {
@@ -97,6 +103,22 @@ L.EditToolbar = L.Toolbar.extend({
 		this.options.featureGroup.off('layeradd layerremove', this._checkDisabled, this);
 
 		L.Toolbar.prototype.removeToolbar.call(this);
+	},
+
+	setFeatureGroup: function (featureGroup) {
+
+		this.options.featureGroup.off('layeradd layerremove', this._checkDisabled, this);
+
+		if (this._modeHandlers) {
+			this._modeHandlers.forEach(function (modeHandler) {
+				if (modeHandler.handler.setFeatureGroup)
+					modeHandler.handler.setFeatureGroup(featureGroup);
+			});
+		}
+
+		this.options.featureGroup = featureGroup;
+		featureGroup.on('layeradd layerremove', this._checkDisabled, this);
+		this._checkDisabled();
 	},
 
 	disable: function () {

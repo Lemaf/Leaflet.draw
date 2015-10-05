@@ -13,6 +13,11 @@
 L.drawVersion = '0.2.4-dev';
 
 L.drawLocal = {
+	change: {
+		toolbar: {
+			swapper: 'Change fetaure group'
+		}
+	},
 	draw: {
 		toolbar: {
 			actions: {
@@ -2043,6 +2048,14 @@ L.Control.Draw = L.Control.extend({
 
 			// Listen for when toolbar is enabled
 			this._toolbars[L.EditToolbar.TYPE].on('enable', this._toolbarEnabled, this);
+
+			// Change featureGroup
+			if (L.ChangeFeatureGroupToolbar && this.options.changeFeatureGroup) {
+				toolbar = new L.ChangeFeatureGroupToolbar(toolbar, this.options.changeFeatureGroup);
+				
+				this._toolbars[L.ChangeFeatureGroupToolbar.TYPE] = toolbar;
+				toolbar.on('enable', this._toolbarEnabled, this);
+			}
 		}
 	},
 
@@ -2577,23 +2590,29 @@ L.EditToolbar = L.Toolbar.extend({
 
 	getModeHandlers: function (map) {
 		var featureGroup = this.options.featureGroup;
-		return [
-			{
-				enabled: this.options.edit,
-				handler: new L.EditToolbar.Edit(map, {
-					featureGroup: featureGroup,
-					selectedPathOptions: this.options.edit.selectedPathOptions
-				}),
-				title: L.drawLocal.edit.toolbar.buttons.edit
-			},
-			{
-				enabled: this.options.remove,
-				handler: new L.EditToolbar.Delete(map, {
-					featureGroup: featureGroup
-				}),
-				title: L.drawLocal.edit.toolbar.buttons.remove
-			}
-		];
+
+		// need change in future
+		if (!this._modeHandlers) {
+			this._modeHandlers = [
+				{
+					enabled: this.options.edit,
+					handler: new L.EditToolbar.Edit(map, {
+						featureGroup: featureGroup,
+						selectedPathOptions: this.options.edit.selectedPathOptions
+					}),
+					title: L.drawLocal.edit.toolbar.buttons.edit
+				},
+				{
+					enabled: this.options.remove,
+					handler: new L.EditToolbar.Delete(map, {
+						featureGroup: featureGroup
+					}),
+					title: L.drawLocal.edit.toolbar.buttons.remove
+				}
+			];
+		}
+
+		return this._modeHandlers;
 	},
 
 	getActions: function () {
@@ -2627,6 +2646,22 @@ L.EditToolbar = L.Toolbar.extend({
 		this.options.featureGroup.off('layeradd layerremove', this._checkDisabled, this);
 
 		L.Toolbar.prototype.removeToolbar.call(this);
+	},
+
+	setFeatureGroup: function (featureGroup) {
+
+		this.options.featureGroup.off('layeradd layerremove', this._checkDisabled, this);
+
+		if (this._modeHandlers) {
+			this._modeHandlers.forEach(function (modeHandler) {
+				if (modeHandler.handler.setFeatureGroup)
+					modeHandler.handler.setFeatureGroup(featureGroup);
+			});
+		}
+
+		this.options.featureGroup = featureGroup;
+		featureGroup.on('layeradd layerremove', this._checkDisabled, this);
+		this._checkDisabled();
 	},
 
 	disable: function () {
@@ -2783,6 +2818,12 @@ L.EditToolbar.Edit = L.Handler.extend({
 			}
 		});
 		this._map.fire('draw:edited', {layers: editedLayers});
+	},
+
+	setFeatureGroup: function (featureGroup) {
+		if (!this.enabled()) {
+			this._featureGroup = featureGroup;
+		}
 	},
 
 	_backupLayer: function (layer) {
@@ -2995,5 +3036,97 @@ L.EditToolbar.Delete = L.Handler.extend({
 	}
 });
 
+
+L.ChangeFeatureGroupToolbar = L.Toolbar.extend({
+
+	statics: {
+		TYPE: 'changeFeatureGroup'
+	},
+
+	options: {},
+
+	initialize: function (editToolbar, options) {
+		L.Toolbar.prototype.initialize.call(this, options);
+		L.setOptions(this, options);
+		this._editToolbar = editToolbar;
+	},
+
+	getModeHandlers: function (map) {
+		return [
+			{
+				enabled: true,
+				handler: new L.ChangeFeatureGroupToolbar.Swapper(this._editToolbar, map, this.options),
+				title: L.drawLocal.change.toolbar.swapper
+			}
+		];
+	}
+
+});
+
+L.ChangeFeatureGroupToolbar.Swapper = L.Handler.extend({
+	statics: {
+		TYPE: 'swapper'
+	},
+
+	includes: L.Mixin.Events,
+
+	options: {},
+
+	initialize: function (editToolbar, map, options) {
+		L.Handler.prototype.initialize.call(this, map, options);
+		this._nextId = 0;
+		this._editToolbar = editToolbar;
+		L.setOptions(this, options);
+	},
+
+	addHooks: function () {
+		this._div = L.DomUtil.create('div', 'leaflet-draw-changefeaturegroup', this._map.getContainer());
+
+		L.DomEvent.disableClickPropagation(this._div);
+
+		if (this.options.featureGroups) {
+			var form, ul, li, input, label, span, id;
+
+			form = L.DomUtil.create('form', '', this._div);
+			ul = L.DomUtil.create('ul', '', form);
+
+			this._featureGroups = {};
+
+			this.options.featureGroups.forEach(function (featureGroup) {
+				id = 'leaflet-draw-changefeaturegroup-' + this._nextId++;
+
+				li = L.DomUtil.create('li', '', ul);
+
+				input = L.DomUtil.create('input', '', li);
+				input.id = id;
+				input.type = 'radio';
+				input.name = 'changeFeatureGroup';
+
+				label = L.DomUtil.create('label', '', li);
+				label.innerHTML = featureGroup.title;
+				label.setAttribute('for', id);
+
+				this._featureGroups[id] = featureGroup.layer;
+				L.DomEvent.on(input, 'change', this._onChangeInput, this);
+
+			}, this);
+		}
+	},
+
+	removeHooks: function () {
+		this._div.remove();
+	},
+
+	_onChangeInput: function(e) {
+		var featureGroup = this._featureGroups[e.target.id];
+
+		if (featureGroup) {
+			this._editToolbar.setFeatureGroup(featureGroup);
+		}
+
+		this.disable();
+	}
+
+});
 
 }(window, document));

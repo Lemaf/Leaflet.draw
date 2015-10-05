@@ -69,6 +69,15 @@ var deps = {
 		],
 		desc: 'Edit toolbar.',
 		deps: ['EditHandlers', 'CommonUI']
+	},
+
+	"EditUI.Change": {
+		src: [
+			'edit/ChangeFeatureGroupToolbar.js',
+			'edit/handler/ChangeFeatureGroupToolbar.Swapper.js'
+		],
+		desc: 'Edit toolbar with change featureGroup',
+		deps: ['EditUI', 'CommonUI']
 	}
 };
 

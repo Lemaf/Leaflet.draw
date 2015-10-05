@@ -34,6 +34,14 @@ L.Control.Draw = L.Control.extend({
 
 			// Listen for when toolbar is enabled
 			this._toolbars[L.EditToolbar.TYPE].on('enable', this._toolbarEnabled, this);
+
+			// Change featureGroup
+			if (L.ChangeFeatureGroupToolbar && this.options.changeFeatureGroup) {
+				toolbar = new L.ChangeFeatureGroupToolbar(toolbar, this.options.changeFeatureGroup);
+				
+				this._toolbars[L.ChangeFeatureGroupToolbar.TYPE] = toolbar;
+				toolbar.on('enable', this._toolbarEnabled, this);
+			}
 		}
 	},
 
