@@ -11,8 +11,7 @@ L.Edit.Poly = L.Handler.extend({
 			className: 'leaflet-div-icon leaflet-editing-icon'
 		}),
 
-		threshould: 10,
-		tolerance: 30
+		tolerance: 5
 	},
 
 	initialize: function (poly, options) {
@@ -64,20 +63,18 @@ L.Edit.Poly = L.Handler.extend({
 		this._markers = [];
 
 		var latlngs = this._poly._latlngs,
-			i, j, len, marker;
+			i, j, len, marker, map, bounds, simplify, points, point;
+
+		map = this._poly._map;
+		bounds = map.getBounds();
+		simplify =  map.getZoom() < map.getMaxZoom();
+		points = [];
 
 		// TODO refactor holes implementation in Polygon to support it here
-
-		var bounds = this._poly._map.getBounds(), map = this._poly._map;
-		var simplify =  map.getZoom() < map.getMaxZoom();
-		var points = [], point;
 
 		for (i = 0, len = latlngs.length; i < len; i++) {
 
 			if (bounds.contains(latlngs[i])) {
-				// point = map.project(latlngs[i]);
-				// point._index = i;
-				// points.push(point);
 				points.push(i);
 			}
 		}
@@ -90,13 +87,7 @@ L.Edit.Poly = L.Handler.extend({
 				return point;
 			});
 
-			var tolerance = this.options.tolerance, limit = 10;
-
-			for (i = 0; i < limit && points.length > this.options.threshould; i++, tolerance += 5) {
-				points = L.LineUtil.simplify(points, tolerance);
-			}
-
-			points = points.map(function (point) {
+			points = L.LineUtil.simplify(points, this.options.tolerance).map(function (point) {
 				return point._index;
 			});
 		}
