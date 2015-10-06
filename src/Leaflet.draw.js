@@ -8,7 +8,8 @@ L.drawLocal = {
 	change: {
 		toolbar: {
 			swapper: 'Change fetaure group'
-		}
+		},
+		cancel: 'Cancel'
 	},
 	draw: {
 		toolbar: {

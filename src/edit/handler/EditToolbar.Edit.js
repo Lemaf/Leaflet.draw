@@ -19,6 +19,8 @@ L.EditToolbar.Edit = L.Handler.extend({
 
 		this._uneditedLayerProps = {};
 
+		map.on('draw:featuregroupchanged', this._onChangeFeatureGroup, this);
+
 		// Save the type so super can fire, need to do this as cannot do this.TYPE :(
 		this.type = L.EditToolbar.Edit.TYPE;
 	},
@@ -99,9 +101,18 @@ L.EditToolbar.Edit = L.Handler.extend({
 		this._map.fire('draw:edited', {layers: editedLayers});
 	},
 
-	setFeatureGroup: function (featureGroup) {
-		if (!this.enabled()) {
-			this._featureGroup = featureGroup;
+	_onChangeFeatureGroup: function (evt) {
+		var enabled = this.enabled();
+
+		if (enabled) {
+			this.revertLayers();
+			this.disable();
+		}
+
+		this._featureGroup = evt.featureGroup;
+
+		if (enabled) {
+			this.enable();
 		}
 	},
 

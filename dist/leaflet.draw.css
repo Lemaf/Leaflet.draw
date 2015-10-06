@@ -301,3 +301,55 @@
 .leaflet-oldie .leaflet-draw-toolbar {
 	border: 1px solid #999;
 }
+
+/* ================================================================== */
+/* Change Feature Group                                               */
+/* ================================================================== */
+
+.leaflet-draw-changefeaturegroup {
+	background-color: rgba(0, 0, 0, 0.2);
+	cursor: default;
+	height: 100%;
+	position: absolute;
+	z-index: 1000;
+	width: 100%;
+}
+
+.leaflet-draw-changefeaturegroup ul {
+	background-color: #fff;
+	border: 1px solid #999;
+	border-radius: 5px;
+	box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+	left: 50%;
+	margin: 0px;
+	max-height: 30em;
+	padding: 0px;
+	position: absolute;
+	top: 50%;
+	transform: translate(-50%, -50%);
+}
+
+.leaflet-draw-changefeaturegroup li {
+	border-bottom: 1px solid #ccc;
+	display: block;
+	padding: 5px;
+}
+
+.leaflet-draw-changefeaturegroup label, .leaflet-draw-changefeaturegroup input {
+	cursor: pointer;
+}
+
+.leaflet-draw-changefeaturegroup li:last-child {
+	border-bottom: none;
+	height: 2.5em;
+}
+
+.leaflet-draw-changefeaturegroup a {
+	background-color: #919187;
+	border-radius: 5px;
+	color: #fff;
+	display: inline-block;
+	float: right;
+	padding: 0.5em;
+	text-decoration: none;
+}

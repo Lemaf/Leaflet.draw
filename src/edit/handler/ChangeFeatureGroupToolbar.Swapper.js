@@ -17,15 +17,22 @@ L.ChangeFeatureGroupToolbar.Swapper = L.Handler.extend({
 	addHooks: function () {
 		this._div = L.DomUtil.create('div', 'leaflet-draw-changefeaturegroup', this._map.getContainer());
 
-		L.DomEvent.disableClickPropagation(this._div);
+		L.DomEvent
+			.on(this._div, 'click', L.DomEvent.stopPropagation)
+			.on(this._div, 'mousemove', L.DomEvent.stopPropagation)
+			.on(this._div, 'mousewheel', L.DomEvent.stopPropagation)
+			.on(this._div, 'mousedown', L.DomEvent.stopPropagation)
+			.on(this._div, 'dblclick', L.DomEvent.stopPropagation);
 
 		if (this.options.featureGroups) {
-			var form, ul, li, input, label, span, id;
+			var form, ul, li, input, label, id, link;
 
 			form = L.DomUtil.create('form', '', this._div);
 			ul = L.DomUtil.create('ul', '', form);
 
 			this._featureGroups = {};
+
+			var currentFeatureGroup = this._editToolbar.getFeatureGroup();
 
 			this.options.featureGroups.forEach(function (featureGroup) {
 				id = 'leaflet-draw-changefeaturegroup-' + this._nextId++;
@@ -36,8 +43,10 @@ L.ChangeFeatureGroupToolbar.Swapper = L.Handler.extend({
 				input.id = id;
 				input.type = 'radio';
 				input.name = 'changeFeatureGroup';
+				input.checked = featureGroup.layer === currentFeatureGroup;
 
 				label = L.DomUtil.create('label', '', li);
+				label.href = '#' + id;
 				label.innerHTML = featureGroup.title;
 				label.setAttribute('for', id);
 
@@ -45,6 +54,13 @@ L.ChangeFeatureGroupToolbar.Swapper = L.Handler.extend({
 				L.DomEvent.on(input, 'change', this._onChangeInput, this);
 
 			}, this);
+
+			li = L.DomUtil.create('li', '', ul);
+			link = L.DomUtil.create('a', '', li);
+			link.href = '#';
+			link.innerHTML = L.drawLocal.change.cancel;
+
+			L.DomEvent.on(link, 'click', this.disable, this);
 		}
 	},
 
@@ -52,14 +68,19 @@ L.ChangeFeatureGroupToolbar.Swapper = L.Handler.extend({
 		this._div.remove();
 	},
 
-	_onChangeInput: function(e) {
+	_onChangeInput: function (e) {
+		L.DomEvent.stopPropagation(e);
+
 		var featureGroup = this._featureGroups[e.target.id];
 
-		if (featureGroup) {
-			this._editToolbar.setFeatureGroup(featureGroup);
+		try {
+			if (featureGroup) {
+				this._editToolbar.setFeatureGroup(featureGroup);
+			}
+			
+		} finally {
+			this.disable();
 		}
-
-		this.disable();
 	}
 
 });

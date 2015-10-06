@@ -48,28 +48,23 @@ L.EditToolbar = L.Toolbar.extend({
 	getModeHandlers: function (map) {
 		var featureGroup = this.options.featureGroup;
 
-		// need change in future
-		if (!this._modeHandlers) {
-			this._modeHandlers = [
-				{
-					enabled: this.options.edit,
-					handler: new L.EditToolbar.Edit(map, {
-						featureGroup: featureGroup,
-						selectedPathOptions: this.options.edit.selectedPathOptions
-					}),
-					title: L.drawLocal.edit.toolbar.buttons.edit
-				},
-				{
-					enabled: this.options.remove,
-					handler: new L.EditToolbar.Delete(map, {
-						featureGroup: featureGroup
-					}),
-					title: L.drawLocal.edit.toolbar.buttons.remove
-				}
-			];
-		}
-
-		return this._modeHandlers;
+		return [
+			{
+				enabled: this.options.edit,
+				handler: new L.EditToolbar.Edit(map, {
+					featureGroup: featureGroup,
+					selectedPathOptions: this.options.edit.selectedPathOptions
+				}),
+				title: L.drawLocal.edit.toolbar.buttons.edit
+			},
+			{
+				enabled: this.options.remove,
+				handler: new L.EditToolbar.Delete(map, {
+					featureGroup: featureGroup
+				}),
+				title: L.drawLocal.edit.toolbar.buttons.remove
+			}
+		];
 	},
 
 	getActions: function () {
@@ -87,6 +82,10 @@ L.EditToolbar = L.Toolbar.extend({
 				context: this
 			}
 		];
+	},
+
+	getFeatureGroup: function () {
+		return this.options.featureGroup;
 	},
 
 	addToolbar: function (map) {
@@ -107,18 +106,16 @@ L.EditToolbar = L.Toolbar.extend({
 
 	setFeatureGroup: function (featureGroup) {
 
+		if (!featureGroup || featureGroup === this.options.featureGroup)
+			return;
+
 		this.options.featureGroup.off('layeradd layerremove', this._checkDisabled, this);
-
-		if (this._modeHandlers) {
-			this._modeHandlers.forEach(function (modeHandler) {
-				if (modeHandler.handler.setFeatureGroup)
-					modeHandler.handler.setFeatureGroup(featureGroup);
-			});
-		}
-
 		this.options.featureGroup = featureGroup;
+
 		featureGroup.on('layeradd layerremove', this._checkDisabled, this);
 		this._checkDisabled();
+
+		this._map.fire('draw:featuregroupchanged', {featureGroup: featureGroup});
 	},
 
 	disable: function () {

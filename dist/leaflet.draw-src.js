@@ -16,7 +16,8 @@ L.drawLocal = {
 	change: {
 		toolbar: {
 			swapper: 'Change fetaure group'
-		}
+		},
+		cancel: 'Cancel'
 	},
 	draw: {
 		toolbar: {
@@ -2591,28 +2592,23 @@ L.EditToolbar = L.Toolbar.extend({
 	getModeHandlers: function (map) {
 		var featureGroup = this.options.featureGroup;
 
-		// need change in future
-		if (!this._modeHandlers) {
-			this._modeHandlers = [
-				{
-					enabled: this.options.edit,
-					handler: new L.EditToolbar.Edit(map, {
-						featureGroup: featureGroup,
-						selectedPathOptions: this.options.edit.selectedPathOptions
-					}),
-					title: L.drawLocal.edit.toolbar.buttons.edit
-				},
-				{
-					enabled: this.options.remove,
-					handler: new L.EditToolbar.Delete(map, {
-						featureGroup: featureGroup
-					}),
-					title: L.drawLocal.edit.toolbar.buttons.remove
-				}
-			];
-		}
-
-		return this._modeHandlers;
+		return [
+			{
+				enabled: this.options.edit,
+				handler: new L.EditToolbar.Edit(map, {
+					featureGroup: featureGroup,
+					selectedPathOptions: this.options.edit.selectedPathOptions
+				}),
+				title: L.drawLocal.edit.toolbar.buttons.edit
+			},
+			{
+				enabled: this.options.remove,
+				handler: new L.EditToolbar.Delete(map, {
+					featureGroup: featureGroup
+				}),
+				title: L.drawLocal.edit.toolbar.buttons.remove
+			}
+		];
 	},
 
 	getActions: function () {
@@ -2630,6 +2626,10 @@ L.EditToolbar = L.Toolbar.extend({
 				context: this
 			}
 		];
+	},
+
+	getFeatureGroup: function () {
+		return this.options.featureGroup;
 	},
 
 	addToolbar: function (map) {
@@ -2650,18 +2650,16 @@ L.EditToolbar = L.Toolbar.extend({
 
 	setFeatureGroup: function (featureGroup) {
 
+		if (!featureGroup || featureGroup === this.options.featureGroup)
+			return;
+
 		this.options.featureGroup.off('layeradd layerremove', this._checkDisabled, this);
-
-		if (this._modeHandlers) {
-			this._modeHandlers.forEach(function (modeHandler) {
-				if (modeHandler.handler.setFeatureGroup)
-					modeHandler.handler.setFeatureGroup(featureGroup);
-			});
-		}
-
 		this.options.featureGroup = featureGroup;
+
 		featureGroup.on('layeradd layerremove', this._checkDisabled, this);
 		this._checkDisabled();
+
+		this._map.fire('draw:featuregroupchanged', {featureGroup: featureGroup});
 	},
 
 	disable: function () {
@@ -2739,6 +2737,8 @@ L.EditToolbar.Edit = L.Handler.extend({
 		}
 
 		this._uneditedLayerProps = {};
+
+		map.on('draw:featuregroupchanged', this._onChangeFeatureGroup, this);
 
 		// Save the type so super can fire, need to do this as cannot do this.TYPE :(
 		this.type = L.EditToolbar.Edit.TYPE;
@@ -2820,9 +2820,18 @@ L.EditToolbar.Edit = L.Handler.extend({
 		this._map.fire('draw:edited', {layers: editedLayers});
 	},
 
-	setFeatureGroup: function (featureGroup) {
-		if (!this.enabled()) {
-			this._featureGroup = featureGroup;
+	_onChangeFeatureGroup: function (evt) {
+		var enabled = this.enabled();
+
+		if (enabled) {
+			this.revertLayers();
+			this.disable();
+		}
+
+		this._featureGroup = evt.featureGroup;
+
+		if (enabled) {
+			this.enable();
 		}
 	},
 
@@ -2929,6 +2938,8 @@ L.EditToolbar.Delete = L.Handler.extend({
 			throw new Error('options.featureGroup must be a L.FeatureGroup');
 		}
 
+		map.on('draw:featuregroupchanged', this._onChangeFeatureGroup, this);
+
 		// Save the type so super can fire, need to do this as cannot do this.TYPE :(
 		this.type = L.EditToolbar.Delete.TYPE;
 	},
@@ -3000,6 +3011,22 @@ L.EditToolbar.Delete = L.Handler.extend({
 
 	save: function () {
 		this._map.fire('draw:deleted', { layers: this._deletedLayers });
+	},
+
+	_onChangeFeatureGroup: function (evt) {
+		var enabled = this.enabled();
+
+		if (enabled) {
+			this.revertLayers();
+			this.disable();
+		}
+
+		this._deletableLayers = evt.featureGroup;
+
+		if (enabled) {
+			this.enable();
+		}
+
 	},
 
 	_enableLayerDelete: function (e) {
@@ -3082,15 +3109,22 @@ L.ChangeFeatureGroupToolbar.Swapper = L.Handler.extend({
 	addHooks: function () {
 		this._div = L.DomUtil.create('div', 'leaflet-draw-changefeaturegroup', this._map.getContainer());
 
-		L.DomEvent.disableClickPropagation(this._div);
+		L.DomEvent
+			.on(this._div, 'click', L.DomEvent.stopPropagation)
+			.on(this._div, 'mousemove', L.DomEvent.stopPropagation)
+			.on(this._div, 'mousewheel', L.DomEvent.stopPropagation)
+			.on(this._div, 'mousedown', L.DomEvent.stopPropagation)
+			.on(this._div, 'dblclick', L.DomEvent.stopPropagation);
 
 		if (this.options.featureGroups) {
-			var form, ul, li, input, label, span, id;
+			var form, ul, li, input, label, id, link;
 
 			form = L.DomUtil.create('form', '', this._div);
 			ul = L.DomUtil.create('ul', '', form);
 
 			this._featureGroups = {};
+
+			var currentFeatureGroup = this._editToolbar.getFeatureGroup();
 
 			this.options.featureGroups.forEach(function (featureGroup) {
 				id = 'leaflet-draw-changefeaturegroup-' + this._nextId++;
@@ -3101,8 +3135,10 @@ L.ChangeFeatureGroupToolbar.Swapper = L.Handler.extend({
 				input.id = id;
 				input.type = 'radio';
 				input.name = 'changeFeatureGroup';
+				input.checked = featureGroup.layer === currentFeatureGroup;
 
 				label = L.DomUtil.create('label', '', li);
+				label.href = '#' + id;
 				label.innerHTML = featureGroup.title;
 				label.setAttribute('for', id);
 
@@ -3110,6 +3146,13 @@ L.ChangeFeatureGroupToolbar.Swapper = L.Handler.extend({
 				L.DomEvent.on(input, 'change', this._onChangeInput, this);
 
 			}, this);
+
+			li = L.DomUtil.create('li', '', ul);
+			link = L.DomUtil.create('a', '', li);
+			link.href = '#';
+			link.innerHTML = L.drawLocal.change.cancel;
+
+			L.DomEvent.on(link, 'click', this.disable, this);
 		}
 	},
 
@@ -3117,14 +3160,19 @@ L.ChangeFeatureGroupToolbar.Swapper = L.Handler.extend({
 		this._div.remove();
 	},
 
-	_onChangeInput: function(e) {
+	_onChangeInput: function (e) {
+		L.DomEvent.stopPropagation(e);
+
 		var featureGroup = this._featureGroups[e.target.id];
 
-		if (featureGroup) {
-			this._editToolbar.setFeatureGroup(featureGroup);
+		try {
+			if (featureGroup) {
+				this._editToolbar.setFeatureGroup(featureGroup);
+			}
+			
+		} finally {
+			this.disable();
 		}
-
-		this.disable();
 	}
 
 });

@@ -17,6 +17,8 @@ L.EditToolbar.Delete = L.Handler.extend({
 			throw new Error('options.featureGroup must be a L.FeatureGroup');
 		}
 
+		map.on('draw:featuregroupchanged', this._onChangeFeatureGroup, this);
+
 		// Save the type so super can fire, need to do this as cannot do this.TYPE :(
 		this.type = L.EditToolbar.Delete.TYPE;
 	},
@@ -88,6 +90,22 @@ L.EditToolbar.Delete = L.Handler.extend({
 
 	save: function () {
 		this._map.fire('draw:deleted', { layers: this._deletedLayers });
+	},
+
+	_onChangeFeatureGroup: function (evt) {
+		var enabled = this.enabled();
+
+		if (enabled) {
+			this.revertLayers();
+			this.disable();
+		}
+
+		this._deletableLayers = evt.featureGroup;
+
+		if (enabled) {
+			this.enable();
+		}
+
 	},
 
 	_enableLayerDelete: function (e) {
