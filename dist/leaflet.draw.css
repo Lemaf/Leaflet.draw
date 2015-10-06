@@ -332,7 +332,7 @@
 .leaflet-draw-changefeaturegroup li {
 	border-bottom: 1px solid #ccc;
 	display: block;
-	padding: 5px;
+	padding: 0.5em;
 }
 
 .leaflet-draw-changefeaturegroup label, .leaflet-draw-changefeaturegroup input {
