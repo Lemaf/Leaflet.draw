@@ -50,7 +50,7 @@ L.ChangeFeatureGroupToolbar.Swapper = L.Handler.extend({
 				label.innerHTML = featureGroup.title;
 				label.setAttribute('for', id);
 
-				this._featureGroups[id] = featureGroup.layer;
+				this._featureGroups[id] = featureGroup;
 				L.DomEvent.on(input, 'change', this._onChangeInput, this);
 
 			}, this);

@@ -2652,17 +2652,17 @@ L.EditToolbar = L.Toolbar.extend({
 
 	setFeatureGroup: function (featureGroup) {
 
-		if (!featureGroup || featureGroup === this.options.featureGroup) {
+		if (!featureGroup || featureGroup.layer === this.options.featureGroup) {
 			return;
 		}
 
 		this.options.featureGroup.off('layeradd layerremove', this._checkDisabled, this);
-		this.options.featureGroup = featureGroup;
+		this.options.featureGroup = featureGroup.layer;
 
-		featureGroup.on('layeradd layerremove', this._checkDisabled, this);
+		featureGroup.layer.on('layeradd layerremove', this._checkDisabled, this);
 		this._checkDisabled();
 
-		this._map.fire('draw:featuregroupchanged', {featureGroup: featureGroup});
+		this._map.fire('draw:featuregroupchanged', {featureGroup: featureGroup.layer, data: featureGroup});
 	},
 
 	disable: function () {
@@ -3145,7 +3145,7 @@ L.ChangeFeatureGroupToolbar.Swapper = L.Handler.extend({
 				label.innerHTML = featureGroup.title;
 				label.setAttribute('for', id);
 
-				this._featureGroups[id] = featureGroup.layer;
+				this._featureGroups[id] = featureGroup;
 				L.DomEvent.on(input, 'change', this._onChangeInput, this);
 
 			}, this);
