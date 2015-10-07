@@ -57,7 +57,6 @@ L.ChangeFeatureGroupToolbar.Swapper = L.Handler.extend({
 
 			li = L.DomUtil.create('li', '', ul);
 			link = L.DomUtil.create('a', '', li);
-			link.href = '#';
 			link.innerHTML = L.drawLocal.change.cancel;
 
 			L.DomEvent.on(link, 'click', this.disable, this);

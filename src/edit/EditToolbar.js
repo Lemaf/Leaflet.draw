@@ -106,8 +106,9 @@ L.EditToolbar = L.Toolbar.extend({
 
 	setFeatureGroup: function (featureGroup) {
 
-		if (!featureGroup || featureGroup === this.options.featureGroup)
+		if (!featureGroup || featureGroup === this.options.featureGroup) {
 			return;
+		}
 
 		this.options.featureGroup.off('layeradd layerremove', this._checkDisabled, this);
 		this.options.featureGroup = featureGroup;

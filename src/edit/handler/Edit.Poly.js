@@ -141,6 +141,8 @@ L.Edit.Poly = L.Handler.extend({
 
 		this._markerGroup.addLayer(marker);
 
+		this._poly.fire('draw:markercreated', {marker: marker});
+
 		return marker;
 	},
 

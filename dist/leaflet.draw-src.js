@@ -1276,6 +1276,8 @@ L.Edit.Poly = L.Handler.extend({
 
 		this._markerGroup.addLayer(marker);
 
+		this._poly.fire('draw:markercreated', {marker: marker});
+
 		return marker;
 	},
 
@@ -2650,8 +2652,9 @@ L.EditToolbar = L.Toolbar.extend({
 
 	setFeatureGroup: function (featureGroup) {
 
-		if (!featureGroup || featureGroup === this.options.featureGroup)
+		if (!featureGroup || featureGroup === this.options.featureGroup) {
 			return;
+		}
 
 		this.options.featureGroup.off('layeradd layerremove', this._checkDisabled, this);
 		this.options.featureGroup = featureGroup;
@@ -3149,7 +3152,6 @@ L.ChangeFeatureGroupToolbar.Swapper = L.Handler.extend({
 
 			li = L.DomUtil.create('li', '', ul);
 			link = L.DomUtil.create('a', '', li);
-			link.href = '#';
 			link.innerHTML = L.drawLocal.change.cancel;
 
 			L.DomEvent.on(link, 'click', this.disable, this);
