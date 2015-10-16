@@ -13,11 +13,23 @@ L.Control.Draw = L.Control.extend({
 
 		L.Control.prototype.initialize.call(this, options);
 
-		var toolbar;
+		var toolbar, editToolbar = null;
+
+		if (L.EditToolbar && this.options.edit) {
+			editToolbar = new L.EditToolbar(this.options.edit);
+		}
 
 		this._toolbars = {};
-
 		// Initialize toolbars
+
+		// Change featureGroup
+		if (editToolbar && L.ChangeFeatureGroupToolbar && this.options.changeFeatureGroup) {
+			toolbar = new L.ChangeFeatureGroupToolbar(editToolbar, this.options.changeFeatureGroup);
+			
+			this._toolbars[L.ChangeFeatureGroupToolbar.TYPE] = toolbar;
+			toolbar.on('enable', this._toolbarEnabled, this);
+		}
+
 		if (L.DrawToolbar && this.options.draw) {
 			toolbar = new L.DrawToolbar(this.options.draw);
 
@@ -27,21 +39,11 @@ L.Control.Draw = L.Control.extend({
 			this._toolbars[L.DrawToolbar.TYPE].on('enable', this._toolbarEnabled, this);
 		}
 
-		if (L.EditToolbar && this.options.edit) {
-			toolbar = new L.EditToolbar(this.options.edit);
-
-			this._toolbars[L.EditToolbar.TYPE] = toolbar;
+		if (editToolbar) {
+			this._toolbars[L.EditToolbar.TYPE] = editToolbar;
 
 			// Listen for when toolbar is enabled
 			this._toolbars[L.EditToolbar.TYPE].on('enable', this._toolbarEnabled, this);
-
-			// Change featureGroup
-			if (L.ChangeFeatureGroupToolbar && this.options.changeFeatureGroup) {
-				toolbar = new L.ChangeFeatureGroupToolbar(toolbar, this.options.changeFeatureGroup);
-				
-				this._toolbars[L.ChangeFeatureGroupToolbar.TYPE] = toolbar;
-				toolbar.on('enable', this._toolbarEnabled, this);
-			}
 		}
 	},
 

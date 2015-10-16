@@ -11,6 +11,7 @@ L.ChangeFeatureGroupToolbar.Swapper = L.Handler.extend({
 		L.Handler.prototype.initialize.call(this, map, options);
 		this._nextId = 0;
 		this._editToolbar = editToolbar;
+		this.type = L.ChangeFeatureGroupToolbar.Swapper.TYPE;
 		L.setOptions(this, options);
 	},
 

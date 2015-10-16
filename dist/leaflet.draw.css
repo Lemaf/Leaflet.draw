@@ -315,6 +315,10 @@
 	width: 100%;
 }
 
+.leaflet-draw-toolbar .leaflet-change-swapper {
+	background-position: -272px -1px;
+}
+
 .leaflet-draw-changefeaturegroup ul {
 	background-color: #fff;
 	border: 1px solid #999;

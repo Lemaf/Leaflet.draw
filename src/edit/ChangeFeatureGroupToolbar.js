@@ -10,6 +10,7 @@ L.ChangeFeatureGroupToolbar = L.Toolbar.extend({
 		L.Toolbar.prototype.initialize.call(this, options);
 		L.setOptions(this, options);
 		this._editToolbar = editToolbar;
+		this._toolbarClass = 'leaflet-change';
 	},
 
 	getModeHandlers: function (map) {
