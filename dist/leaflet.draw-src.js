@@ -3124,10 +3124,13 @@ L.ChangeFeatureGroupToolbar.Swapper = L.Handler.extend({
 			.on(this._div, 'dblclick', L.DomEvent.stopPropagation);
 
 		if (this.options.featureGroups) {
-			var form, ul, li, input, label, id, link;
+			var form, ul, li, label, id, link;
 
 			form = L.DomUtil.create('form', '', this._div);
 			ul = L.DomUtil.create('ul', '', form);
+
+			var liTitle = L.DomUtil.create('li', 'title', ul);
+			liTitle.textContent = this.options.title || '';
 
 			this._featureGroups = {};
 
@@ -3137,20 +3140,25 @@ L.ChangeFeatureGroupToolbar.Swapper = L.Handler.extend({
 				id = 'leaflet-draw-changefeaturegroup-' + this._nextId++;
 
 				li = L.DomUtil.create('li', '', ul);
+				li._featureGroupID = id;
 
-				input = L.DomUtil.create('input', '', li);
-				input.id = id;
-				input.type = 'radio';
-				input.name = 'changeFeatureGroup';
-				input.checked = featureGroup.layer === currentFeatureGroup;
+				// input = L.DomUtil.create('input', '', li);
+				// input.id = id;
+				// input.type = 'radio';
+				// input.name = 'changeFeatureGroup';
+				// input.checked = featureGroup.layer === currentFeatureGroup;
+				
+				if (featureGroup.layer === currentFeatureGroup) {
+					L.DomUtil.addClass(li, 'selected');
+				}
 
-				label = L.DomUtil.create('label', '', li);
-				label.href = '#' + id;
-				label.innerHTML = featureGroup.title;
-				label.setAttribute('for', id);
+				label = L.DomUtil.create('span', '', li);
+				label.textContent = featureGroup.title;
+
+				L.DomEvent
+					.on(li, 'click', this._onItemClick, this);
 
 				this._featureGroups[id] = featureGroup;
-				L.DomEvent.on(input, 'change', this._onChangeInput, this);
 
 			}, this);
 
@@ -3166,10 +3174,10 @@ L.ChangeFeatureGroupToolbar.Swapper = L.Handler.extend({
 		this._div.remove();
 	},
 
-	_onChangeInput: function (e) {
+	_onItemClick: function (e) {
 		L.DomEvent.stopPropagation(e);
 
-		var featureGroup = this._featureGroups[e.target.id];
+		var featureGroup = this._featureGroups[e.currentTarget._featureGroupID];
 
 		try {
 			if (featureGroup) {

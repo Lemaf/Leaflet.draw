@@ -352,8 +352,24 @@
 	background-color: #919187;
 	border-radius: 5px;
 	color: #fff;
+	cursor: pointer;
 	display: inline-block;
 	float: right;
 	padding: 0.5em;
 	text-decoration: none;
+}
+
+.leaflet-draw-changefeaturegroup span {
+	cursor: pointer;
+	display: block;
+	width: 100%;
+}
+
+.leaflet-draw-changefeaturegroup li.selected {
+	background-color: #94C2EA;
+}
+
+.leaflet-draw-changefeaturegroup li.title {
+	font-weight: bold;
+	line-height: 3em;
 }
