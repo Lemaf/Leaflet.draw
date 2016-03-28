@@ -38,7 +38,7 @@
   "homepage":"",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Leaflet/Leaflet.draw.git"
+    "url": "https://github.com/Lemaf/Leaflet.draw.git"
   },
   "dependencies": {
     "leaflet-dist": "0.7.x"
