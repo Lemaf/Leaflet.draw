@@ -5,12 +5,13 @@ L.ChangeFeatureGroupToolbar.Swapper = L.Handler.extend({
 
 	includes: L.Mixin.Events,
 
-	options: {},
+	options: {
+		featureGroup: null
+	},
 
-	initialize: function (editToolbar, map, options) {
+	initialize: function (map, options) {
 		L.Handler.prototype.initialize.call(this, map, options);
 		this._nextId = 0;
-		this._editToolbar = editToolbar;
 		this.type = L.ChangeFeatureGroupToolbar.Swapper.TYPE;
 		L.setOptions(this, options);
 	},
@@ -36,21 +37,13 @@ L.ChangeFeatureGroupToolbar.Swapper = L.Handler.extend({
 
 			this._featureGroups = {};
 
-			var currentFeatureGroup = this._editToolbar.getFeatureGroup();
-
 			this.options.featureGroups.forEach(function (featureGroup) {
 				id = 'leaflet-draw-changefeaturegroup-' + this._nextId++;
 
 				li = L.DomUtil.create('li', '', ul);
 				li._featureGroupID = id;
-
-				// input = L.DomUtil.create('input', '', li);
-				// input.id = id;
-				// input.type = 'radio';
-				// input.name = 'changeFeatureGroup';
-				// input.checked = featureGroup.layer === currentFeatureGroup;
 				
-				if (featureGroup.layer === currentFeatureGroup) {
+				if (this.options.featureGroup && featureGroup.layer === this.options.featureGroup.layer) {
 					L.DomUtil.addClass(li, 'selected');
 				}
 
@@ -79,16 +72,10 @@ L.ChangeFeatureGroupToolbar.Swapper = L.Handler.extend({
 	_onItemClick: function (e) {
 		L.DomEvent.stopPropagation(e);
 
-		var featureGroup = this._featureGroups[e.currentTarget._featureGroupID];
+		this.options.featureGroup = this._featureGroups[e.currentTarget._featureGroupID];
+		this._map.fire('draw:featuregroupchanged', {featureGroup: this.options.featureGroup});
+		this.disable();
 
-		try {
-			if (featureGroup) {
-				this._editToolbar.setFeatureGroup(featureGroup);
-			}
-			
-		} finally {
-			this.disable();
-		}
 	}
 
 });

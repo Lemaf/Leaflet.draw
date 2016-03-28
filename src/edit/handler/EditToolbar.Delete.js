@@ -100,7 +100,7 @@ L.EditToolbar.Delete = L.Handler.extend({
 			this.disable();
 		}
 
-		this._deletableLayers = evt.featureGroup;
+		this._deletableLayers = evt.featureGroup.layer;
 
 		if (enabled) {
 			this.enable();

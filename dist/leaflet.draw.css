@@ -136,79 +136,122 @@
 /* ================================================================== */
 
 .leaflet-draw-toolbar .leaflet-draw-draw-polyline {
-	background-position: -2px -2px;
+	background-position: -344px -8px;
 }
 
 .leaflet-touch .leaflet-draw-toolbar .leaflet-draw-draw-polyline {
-	background-position: 0 -1px;
+	background-position: -342px -7px;
 }
 
 .leaflet-draw-toolbar .leaflet-draw-draw-polygon {
-	background-position: -31px -2px;
+	background-position: -386px -8px;
 }
 
 .leaflet-touch .leaflet-draw-toolbar .leaflet-draw-draw-polygon {
-	background-position: -29px -1px;
+	background-position: -384px -7px;
 }
 
 .leaflet-draw-toolbar .leaflet-draw-draw-rectangle {
-	background-position: -62px -2px;
+	background-position: -428px -8px;
 }
 
 .leaflet-touch .leaflet-draw-toolbar .leaflet-draw-draw-rectangle {
-	background-position: -60px -1px;
+	background-position: -426px -7px;
 }
 
 .leaflet-draw-toolbar .leaflet-draw-draw-circle {
-	background-position: -92px -2px;
+	background-position: -470px -8px;
 }
 
 .leaflet-touch .leaflet-draw-toolbar .leaflet-draw-draw-circle {
-	background-position: -90px -1px;
+	background-position: -468px -7px;
 }
 
 .leaflet-draw-toolbar .leaflet-draw-draw-marker {
-	background-position: -122px -2px;
+	background-position: -512px -8px;
 }
 
 .leaflet-touch .leaflet-draw-toolbar .leaflet-draw-draw-marker {
-	background-position: -120px -1px;
+	background-position: -510px -7px;
 }
+
+// Disabled
+
+.leaflet-draw-toolbar .leaflet-draw-draw-polyline.leaflet-disabled {
+	background-position: -8px -8px;
+}
+
+.leaflet-touch .leaflet-draw-toolbar .leaflet-draw-draw-polyline.leaflet-disabled {
+	background-position: -6px -7px;
+}
+
+.leaflet-draw-toolbar .leaflet-draw-draw-polygon.leaflet-disabled {
+	background-position: -50px -8px;
+}
+
+.leaflet-touch .leaflet-draw-toolbar .leaflet-draw-draw-polygon.leaflet-disabled {
+	background-position: -48px -7px;
+}
+
+.leaflet-draw-toolbar .leaflet-draw-draw-rectangle.leaflet-disabled {
+	background-position: -92px -8px;
+}
+
+.leaflet-touch .leaflet-draw-toolbar .leaflet-draw-draw-rectangle.leaflet-disabled {
+	background-position: -90px -7px;
+}
+
+.leaflet-draw-toolbar .leaflet-draw-draw-circle.leaflet-disabled {
+	background-position: -134px -8px;
+}
+
+.leaflet-touch .leaflet-draw-toolbar .leaflet-draw-draw-circle.leaflet-disabled {
+	background-position: -132px -7px;
+}
+
+.leaflet-draw-toolbar .leaflet-draw-draw-marker.leaflet-disabled {
+	background-position: -176px -8px;
+}
+
+.leaflet-touch .leaflet-draw-toolbar .leaflet-draw-draw-marker.leaflet-disabled {
+	background-position: -174px -7px;
+}
+
 
 /* ================================================================== */
 /* Edit toolbar
 /* ================================================================== */
 
 .leaflet-draw-toolbar .leaflet-draw-edit-edit {
-	background-position: -152px -2px;
+	background-position: -554px -9px;
 }
 
 .leaflet-touch .leaflet-draw-toolbar .leaflet-draw-edit-edit {
-	background-position: -150px -1px;
+	background-position: -552px -8px;
 }
 
 .leaflet-draw-toolbar .leaflet-draw-edit-remove {
-	background-position: -182px -2px;
+	background-position: -596px -9px;
 }
 
 .leaflet-touch .leaflet-draw-toolbar .leaflet-draw-edit-remove {
-	background-position: -180px -1px;
+	background-position: -594px -8px;
 }
 
 .leaflet-draw-toolbar .leaflet-draw-edit-edit.leaflet-disabled {
-	background-position: -212px -2px;
+	background-position: -217px -9px;
 }
 
 .leaflet-touch .leaflet-draw-toolbar .leaflet-draw-edit-edit.leaflet-disabled {
-	background-position: -210px -1px;
+	background-position: -215px -8px;
 }
 
 .leaflet-draw-toolbar .leaflet-draw-edit-remove.leaflet-disabled {
-	background-position: -242px -2px;
+	background-position: -260px -9px;
 }
 
 .leaflet-touch .leaflet-draw-toolbar .leaflet-draw-edit-remove.leaflet-disabled {
-	background-position: -240px -2px;
+	background-position: -258px -8px;
 }
 
 /* ================================================================== */
@@ -316,7 +359,11 @@
 }
 
 .leaflet-draw-toolbar .leaflet-change-swapper {
-	background-position: -272px -1px;
+	background-position: -638px -8px;
+}
+
+.leaflet-draw-toolbar .leaflet-change-swapper.leaflet-disabled {
+	background-position: -302px -8px;
 }
 
 .leaflet-draw-changefeaturegroup ul {

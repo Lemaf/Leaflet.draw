@@ -109,7 +109,7 @@ L.EditToolbar.Edit = L.Handler.extend({
 			this.disable();
 		}
 
-		this._featureGroup = evt.featureGroup;
+		this._featureGroup = evt.featureGroup.layer;
 
 		if (enabled) {
 			this.enable();

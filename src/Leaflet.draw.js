@@ -7,7 +7,7 @@ L.drawVersion = '0.2.4-dev';
 L.drawLocal = {
 	change: {
 		toolbar: {
-			swapper: 'Change fetaure group'
+			swapper: 'Select fetaure group'
 		},
 		cancel: 'Cancel'
 	},

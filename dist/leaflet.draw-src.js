@@ -15,7 +15,7 @@ L.drawVersion = '0.2.4-dev';
 L.drawLocal = {
 	change: {
 		toolbar: {
-			swapper: 'Change fetaure group'
+			swapper: 'Select fetaure group'
 		},
 		cancel: 'Cancel'
 	},
@@ -2020,7 +2020,8 @@ L.Control.Draw = L.Control.extend({
 	options: {
 		position: 'topleft',
 		draw: {},
-		edit: false
+		edit: false,
+		featureGroup: undefined
 	},
 
 	initialize: function (options) {
@@ -2030,38 +2031,59 @@ L.Control.Draw = L.Control.extend({
 
 		L.Control.prototype.initialize.call(this, options);
 
-		var toolbar, editToolbar = null;
+		var toolbar = null;
 
-		if (L.EditToolbar && this.options.edit) {
-			editToolbar = new L.EditToolbar(this.options.edit);
-		}
-
-		this._toolbars = {};
 		// Initialize toolbars
+		this._toolbars = {};
 
 		// Change featureGroup
-		if (editToolbar && L.ChangeFeatureGroupToolbar && this.options.changeFeatureGroup) {
-			toolbar = new L.ChangeFeatureGroupToolbar(editToolbar, this.options.changeFeatureGroup);
+		if (L.ChangeFeatureGroupToolbar && this.options.changeFeatureGroup) {
+
+			if (this.options.featureGroup) {
+				this.options.changeFeatureGroup.featureGroup = this.options.featureGroup;
+			}
+
+			toolbar = new L.ChangeFeatureGroupToolbar(this.options.changeFeatureGroup);
 			
 			this._toolbars[L.ChangeFeatureGroupToolbar.TYPE] = toolbar;
-			toolbar.on('enable', this._toolbarEnabled, this);
+
+			// Listen for when toolbar is enabled
+			this._toolbars[L.ChangeFeatureGroupToolbar.TYPE].on('enable', this._toolbarEnabled, this);
+
 		}
 
+		// Draw Tools
 		if (L.DrawToolbar && this.options.draw) {
+
+			if (this.options.featureGroup) {
+				this.options.draw.featureGroup = this.options.featureGroup;
+			}
+
 			toolbar = new L.DrawToolbar(this.options.draw);
 
 			this._toolbars[L.DrawToolbar.TYPE] = toolbar;
 
 			// Listen for when toolbar is enabled
 			this._toolbars[L.DrawToolbar.TYPE].on('enable', this._toolbarEnabled, this);
+
 		}
 
-		if (editToolbar) {
-			this._toolbars[L.EditToolbar.TYPE] = editToolbar;
+		// Edit tools
+		if (L.EditToolbar && this.options.edit) {
+
+			if (this.options.featureGroup) {
+				this.options.edit.featureGroup = this.options.featureGroup;
+			}
+
+			toolbar = new L.EditToolbar(this.options.edit);
+
+			this._toolbars[L.EditToolbar.TYPE] = toolbar;
 
 			// Listen for when toolbar is enabled
 			this._toolbars[L.EditToolbar.TYPE].on('enable', this._toolbarEnabled, this);
+
 		}
+
 	},
 
 	onAdd: function (map) {
@@ -2099,6 +2121,22 @@ L.Control.Draw = L.Control.extend({
 		}
 	},
 
+	showButton: function (type, toggleClass) {
+		this._toggleButton({
+			showing: true,
+			type: type,
+			toggleClass: toggleClass // class to remove to show the element
+		});
+	},
+
+	hideButton: function (type, toggleClass) {
+		this._toggleButton({
+			showing: false,
+			type: type,
+			toggleClass: toggleClass // class to add to hide the element
+		});
+	},
+
 	setDrawingOptions: function (options) {
 		for (var toolbarId in this._toolbars) {
 			if (this._toolbars[toolbarId] instanceof L.DrawToolbar) {
@@ -2113,6 +2151,17 @@ L.Control.Draw = L.Control.extend({
 		for (var toolbarId in this._toolbars) {
 			if (this._toolbars[toolbarId] !== enabledToolbar) {
 				this._toolbars[toolbarId].disable();
+			}
+		}
+	},
+
+	_toggleButton: function (options) {
+		// loop over the toolbars to find the right buttons
+		for (var toolbarId in this._toolbars) {
+			if (this._toolbars.hasOwnProperty(toolbarId)) {
+				if (this._toolbars[toolbarId].toggleButton) {
+					this._toolbars[toolbarId]._toggleButton(options);
+				}
 			}
 		}
 	}
@@ -2379,6 +2428,53 @@ L.Toolbar = L.Class.extend({
 		L.DomUtil.removeClass(this._toolbarContainer, 'leaflet-draw-toolbar-nobottom');
 		L.DomUtil.removeClass(this._actionsContainer, 'leaflet-draw-actions-top');
 		L.DomUtil.removeClass(this._actionsContainer, 'leaflet-draw-actions-bottom');
+	},
+
+	_toggleButton: function (options) {
+		var toggleList = [],
+			showing = options.showing,
+			type = options.type,
+			toggleClass = options.toggleClass || 'leaflet-draw-hidden',
+			modes = this._modes,
+			addToToggleList = function (id) {
+				if (modes[id]) {
+					toggleList.push(modes[id].button);
+				}
+			};
+
+		if (typeof type === 'undefined') {
+			// all buttons
+			for (var handlerId in this._modes) {
+				if (this._modes.hasOwnProperty(handlerId)) {
+					addToToggleList(handlerId);
+				}
+			}
+
+		} else if (typeof type === 'string') {
+			// one button
+			addToToggleList(type);
+
+		} else if (L.Util.isArray(type)) {
+			// array of buttons
+			for (var idHandler in type) {
+				if (type.hasOwnProperty(idHandler)) {
+					addToToggleList(type[idHandler]);
+				}
+			}
+		}
+
+		for (var id in toggleList ) {
+			if (toggleList.hasOwnProperty(id)) {
+				var button = toggleList[id];
+				
+				if (showing) {
+					L.DomUtil.removeClass(button, toggleClass);
+
+				} else {
+					L.DomUtil.addClass(button, toggleClass);
+				}
+			}
+		}
 	}
 });
 
@@ -2460,13 +2556,14 @@ L.DrawToolbar = L.Toolbar.extend({
 		polygon: {},
 		rectangle: {},
 		circle: {},
-		marker: {}
+		marker: {},
+		featureGroup: undefined
 	},
 
 	initialize: function (options) {
 		// Ensure that the options are merged correctly since L.extend is only shallow
 		for (var type in this.options) {
-			if (this.options.hasOwnProperty(type)) {
+			if (this.options.hasOwnProperty(type) && type !== 'featureGroup') {
 				if (options[type]) {
 					options[type] = L.extend({}, this.options[type], options[type]);
 				}
@@ -2484,7 +2581,7 @@ L.DrawToolbar = L.Toolbar.extend({
 		var modeHandlers = [];
 		
 		for (var toolName in this.options) {
-			if (this.options.hasOwnProperty(toolName)) {
+			if (this.options.hasOwnProperty(toolName) && toolName !== 'featureGroup') {
 				var typeName = toolName[0].toUpperCase() + toolName.substring(1);
 				if (L.Draw[typeName]) {
 					
@@ -2538,11 +2635,64 @@ L.DrawToolbar = L.Toolbar.extend({
 		L.setOptions(this, options);
 
 		for (var type in this._modes) {
-			if (this._modes.hasOwnProperty(type) && options.hasOwnProperty(type)) {
+			if (this._modes.hasOwnProperty(type) && options.hasOwnProperty(type) && type !== 'featureGroup') {
 				this._modes[type].handler.setOptions(options[type]);
 			}
 		}
+	},
+
+	addToolbar: function (map) {
+
+		var container = L.Toolbar.prototype.addToolbar.call(this, map);
+
+		this._checkDisabled();
+
+		this._map.on('draw:featuregroupchanged', this.setFeatureGroup, this);
+
+		return container;
+
+	},
+
+	setFeatureGroup: function (evt) {
+
+		if (!evt.featureGroup || evt.featureGroup.layer === this.options.featureGroup) {
+			return;
+		}
+
+		this.options.featureGroup = evt.featureGroup;
+
+		this._checkDisabled();
+
+	},
+
+	_checkDisabled: function () {
+
+		var featureGroup = this.options.featureGroup;
+		var	button;
+		var handler;
+
+		for (var type in this._modes) {
+			if (this._modes.hasOwnProperty(type) && type !== 'featureGroup') {
+
+				button = this._modes[type].button;
+				handler = this._modes[type].handler;
+
+				if (featureGroup) {
+					L.DomUtil.removeClass(button, 'leaflet-disabled');
+					button.setAttribute('title', L.drawLocal.draw.toolbar.buttons[type]);
+					L.DomEvent.on(button, 'click', handler.enable, handler);
+				} else {
+					L.DomUtil.addClass(button, 'leaflet-disabled');
+					button.removeAttribute('title');
+					L.DomEvent.off(button, 'click', handler.enable);
+				}
+
+			}
+
+		}
+
 	}
+
 });
 
 
@@ -2571,11 +2721,12 @@ L.EditToolbar = L.Toolbar.extend({
 			}
 		},
 		remove: {},
-		featureGroup: null /* REQUIRED! TODO: perhaps if not set then all layers on the map are selectable? */
+		featureGroup: new L.featureGroup() /* REQUIRED! TODO: perhaps if not set then all layers on the map are selectable? */
 	},
 
 	initialize: function (options) {
 		// Need to set this manually since null is an acceptable value here
+
 		if (options.edit) {
 			if (typeof options.edit.selectedPathOptions === 'undefined') {
 				options.edit.selectedPathOptions = this.options.edit.selectedPathOptions;
@@ -2591,6 +2742,7 @@ L.EditToolbar = L.Toolbar.extend({
 		L.Toolbar.prototype.initialize.call(this, options);
 
 		this._selectedFeatureCount = 0;
+
 	},
 
 	getModeHandlers: function (map) {
@@ -2641,7 +2793,11 @@ L.EditToolbar = L.Toolbar.extend({
 
 		this._checkDisabled();
 
-		this.options.featureGroup.on('layeradd layerremove', this._checkDisabled, this);
+		if (this.options.featureGroup) {
+			this.options.featureGroup.on('layeradd layerremove', this._checkDisabled, this);
+		}
+
+		this._map.on('draw:featuregroupchanged', this.setFeatureGroup, this);
 
 		return container;
 	},
@@ -2652,19 +2808,20 @@ L.EditToolbar = L.Toolbar.extend({
 		L.Toolbar.prototype.removeToolbar.call(this);
 	},
 
-	setFeatureGroup: function (featureGroup) {
+	setFeatureGroup: function (evt) {
 
-		if (!featureGroup || featureGroup.layer === this.options.featureGroup) {
+		if (!evt.featureGroup || evt.featureGroup.layer === this.options.featureGroup) {
 			return;
 		}
 
-		this.options.featureGroup.off('layeradd layerremove', this._checkDisabled, this);
-		this.options.featureGroup = featureGroup.layer;
+		if (this.options.featureGroup) {
+			this.options.featureGroup.off('layeradd layerremove', this._checkDisabled, this);
+		}
 
-		featureGroup.layer.on('layeradd layerremove', this._checkDisabled, this);
+		this.options.featureGroup = evt.featureGroup.layer;
+
+		this.options.featureGroup.on('layeradd layerremove', this._checkDisabled, this);
 		this._checkDisabled();
-
-		this._map.fire('draw:featuregroupchanged', {featureGroup: featureGroup.layer, data: featureGroup});
 	},
 
 	disable: function () {
@@ -2682,7 +2839,7 @@ L.EditToolbar = L.Toolbar.extend({
 
 	_checkDisabled: function () {
 		var featureGroup = this.options.featureGroup,
-			hasLayers = featureGroup.getLayers().length !== 0,
+			hasLayers = featureGroup && featureGroup.getLayers().length !== 0,
 			button;
 
 		if (this.options.edit) {
@@ -2833,7 +2990,7 @@ L.EditToolbar.Edit = L.Handler.extend({
 			this.disable();
 		}
 
-		this._featureGroup = evt.featureGroup;
+		this._featureGroup = evt.featureGroup.layer;
 
 		if (enabled) {
 			this.enable();
@@ -3026,7 +3183,7 @@ L.EditToolbar.Delete = L.Handler.extend({
 			this.disable();
 		}
 
-		this._deletableLayers = evt.featureGroup;
+		this._deletableLayers = evt.featureGroup.layer;
 
 		if (enabled) {
 			this.enable();
@@ -3077,10 +3234,9 @@ L.ChangeFeatureGroupToolbar = L.Toolbar.extend({
 
 	options: {},
 
-	initialize: function (editToolbar, options) {
+	initialize: function (options) {
 		L.Toolbar.prototype.initialize.call(this, options);
 		L.setOptions(this, options);
-		this._editToolbar = editToolbar;
 		this._toolbarClass = 'leaflet-change';
 	},
 
@@ -3088,7 +3244,7 @@ L.ChangeFeatureGroupToolbar = L.Toolbar.extend({
 		return [
 			{
 				enabled: true,
-				handler: new L.ChangeFeatureGroupToolbar.Swapper(this._editToolbar, map, this.options),
+				handler: new L.ChangeFeatureGroupToolbar.Swapper(map, this.options),
 				title: L.drawLocal.change.toolbar.swapper
 			}
 		];
@@ -3103,12 +3259,13 @@ L.ChangeFeatureGroupToolbar.Swapper = L.Handler.extend({
 
 	includes: L.Mixin.Events,
 
-	options: {},
+	options: {
+		featureGroup: null
+	},
 
-	initialize: function (editToolbar, map, options) {
+	initialize: function (map, options) {
 		L.Handler.prototype.initialize.call(this, map, options);
 		this._nextId = 0;
-		this._editToolbar = editToolbar;
 		this.type = L.ChangeFeatureGroupToolbar.Swapper.TYPE;
 		L.setOptions(this, options);
 	},
@@ -3134,21 +3291,13 @@ L.ChangeFeatureGroupToolbar.Swapper = L.Handler.extend({
 
 			this._featureGroups = {};
 
-			var currentFeatureGroup = this._editToolbar.getFeatureGroup();
-
 			this.options.featureGroups.forEach(function (featureGroup) {
 				id = 'leaflet-draw-changefeaturegroup-' + this._nextId++;
 
 				li = L.DomUtil.create('li', '', ul);
 				li._featureGroupID = id;
-
-				// input = L.DomUtil.create('input', '', li);
-				// input.id = id;
-				// input.type = 'radio';
-				// input.name = 'changeFeatureGroup';
-				// input.checked = featureGroup.layer === currentFeatureGroup;
 				
-				if (featureGroup.layer === currentFeatureGroup) {
+				if (this.options.featureGroup && featureGroup.layer === this.options.featureGroup.layer) {
 					L.DomUtil.addClass(li, 'selected');
 				}
 
@@ -3177,16 +3326,10 @@ L.ChangeFeatureGroupToolbar.Swapper = L.Handler.extend({
 	_onItemClick: function (e) {
 		L.DomEvent.stopPropagation(e);
 
-		var featureGroup = this._featureGroups[e.currentTarget._featureGroupID];
+		this.options.featureGroup = this._featureGroups[e.currentTarget._featureGroupID];
+		this._map.fire('draw:featuregroupchanged', {featureGroup: this.options.featureGroup});
+		this.disable();
 
-		try {
-			if (featureGroup) {
-				this._editToolbar.setFeatureGroup(featureGroup);
-			}
-			
-		} finally {
-			this.disable();
-		}
 	}
 
 });

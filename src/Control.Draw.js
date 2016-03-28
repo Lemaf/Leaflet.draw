@@ -3,7 +3,8 @@ L.Control.Draw = L.Control.extend({
 	options: {
 		position: 'topleft',
 		draw: {},
-		edit: false
+		edit: false,
+		featureGroup: undefined
 	},
 
 	initialize: function (options) {
@@ -13,38 +14,59 @@ L.Control.Draw = L.Control.extend({
 
 		L.Control.prototype.initialize.call(this, options);
 
-		var toolbar, editToolbar = null;
+		var toolbar = null;
 
-		if (L.EditToolbar && this.options.edit) {
-			editToolbar = new L.EditToolbar(this.options.edit);
-		}
-
-		this._toolbars = {};
 		// Initialize toolbars
+		this._toolbars = {};
 
 		// Change featureGroup
-		if (editToolbar && L.ChangeFeatureGroupToolbar && this.options.changeFeatureGroup) {
-			toolbar = new L.ChangeFeatureGroupToolbar(editToolbar, this.options.changeFeatureGroup);
+		if (L.ChangeFeatureGroupToolbar && this.options.changeFeatureGroup) {
+
+			if (this.options.featureGroup) {
+				this.options.changeFeatureGroup.featureGroup = this.options.featureGroup;
+			}
+
+			toolbar = new L.ChangeFeatureGroupToolbar(this.options.changeFeatureGroup);
 			
 			this._toolbars[L.ChangeFeatureGroupToolbar.TYPE] = toolbar;
-			toolbar.on('enable', this._toolbarEnabled, this);
+
+			// Listen for when toolbar is enabled
+			this._toolbars[L.ChangeFeatureGroupToolbar.TYPE].on('enable', this._toolbarEnabled, this);
+
 		}
 
+		// Draw Tools
 		if (L.DrawToolbar && this.options.draw) {
+
+			if (this.options.featureGroup) {
+				this.options.draw.featureGroup = this.options.featureGroup;
+			}
+
 			toolbar = new L.DrawToolbar(this.options.draw);
 
 			this._toolbars[L.DrawToolbar.TYPE] = toolbar;
 
 			// Listen for when toolbar is enabled
 			this._toolbars[L.DrawToolbar.TYPE].on('enable', this._toolbarEnabled, this);
+
 		}
 
-		if (editToolbar) {
-			this._toolbars[L.EditToolbar.TYPE] = editToolbar;
+		// Edit tools
+		if (L.EditToolbar && this.options.edit) {
+
+			if (this.options.featureGroup) {
+				this.options.edit.featureGroup = this.options.featureGroup;
+			}
+
+			toolbar = new L.EditToolbar(this.options.edit);
+
+			this._toolbars[L.EditToolbar.TYPE] = toolbar;
 
 			// Listen for when toolbar is enabled
 			this._toolbars[L.EditToolbar.TYPE].on('enable', this._toolbarEnabled, this);
+
 		}
+
 	},
 
 	onAdd: function (map) {
@@ -82,6 +104,22 @@ L.Control.Draw = L.Control.extend({
 		}
 	},
 
+	showButton: function (type, toggleClass) {
+		this._toggleButton({
+			showing: true,
+			type: type,
+			toggleClass: toggleClass // class to remove to show the element
+		});
+	},
+
+	hideButton: function (type, toggleClass) {
+		this._toggleButton({
+			showing: false,
+			type: type,
+			toggleClass: toggleClass // class to add to hide the element
+		});
+	},
+
 	setDrawingOptions: function (options) {
 		for (var toolbarId in this._toolbars) {
 			if (this._toolbars[toolbarId] instanceof L.DrawToolbar) {
@@ -96,6 +134,17 @@ L.Control.Draw = L.Control.extend({
 		for (var toolbarId in this._toolbars) {
 			if (this._toolbars[toolbarId] !== enabledToolbar) {
 				this._toolbars[toolbarId].disable();
+			}
+		}
+	},
+
+	_toggleButton: function (options) {
+		// loop over the toolbars to find the right buttons
+		for (var toolbarId in this._toolbars) {
+			if (this._toolbars.hasOwnProperty(toolbarId)) {
+				if (this._toolbars[toolbarId].toggleButton) {
+					this._toolbars[toolbarId]._toggleButton(options);
+				}
 			}
 		}
 	}

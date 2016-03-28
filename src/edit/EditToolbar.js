@@ -23,11 +23,12 @@ L.EditToolbar = L.Toolbar.extend({
 			}
 		},
 		remove: {},
-		featureGroup: null /* REQUIRED! TODO: perhaps if not set then all layers on the map are selectable? */
+		featureGroup: new L.featureGroup() /* REQUIRED! TODO: perhaps if not set then all layers on the map are selectable? */
 	},
 
 	initialize: function (options) {
 		// Need to set this manually since null is an acceptable value here
+
 		if (options.edit) {
 			if (typeof options.edit.selectedPathOptions === 'undefined') {
 				options.edit.selectedPathOptions = this.options.edit.selectedPathOptions;
@@ -43,6 +44,7 @@ L.EditToolbar = L.Toolbar.extend({
 		L.Toolbar.prototype.initialize.call(this, options);
 
 		this._selectedFeatureCount = 0;
+
 	},
 
 	getModeHandlers: function (map) {
@@ -93,7 +95,11 @@ L.EditToolbar = L.Toolbar.extend({
 
 		this._checkDisabled();
 
-		this.options.featureGroup.on('layeradd layerremove', this._checkDisabled, this);
+		if (this.options.featureGroup) {
+			this.options.featureGroup.on('layeradd layerremove', this._checkDisabled, this);
+		}
+
+		this._map.on('draw:featuregroupchanged', this.setFeatureGroup, this);
 
 		return container;
 	},
@@ -104,19 +110,20 @@ L.EditToolbar = L.Toolbar.extend({
 		L.Toolbar.prototype.removeToolbar.call(this);
 	},
 
-	setFeatureGroup: function (featureGroup) {
+	setFeatureGroup: function (evt) {
 
-		if (!featureGroup || featureGroup.layer === this.options.featureGroup) {
+		if (!evt.featureGroup || evt.featureGroup.layer === this.options.featureGroup) {
 			return;
 		}
 
-		this.options.featureGroup.off('layeradd layerremove', this._checkDisabled, this);
-		this.options.featureGroup = featureGroup.layer;
+		if (this.options.featureGroup) {
+			this.options.featureGroup.off('layeradd layerremove', this._checkDisabled, this);
+		}
 
-		featureGroup.layer.on('layeradd layerremove', this._checkDisabled, this);
+		this.options.featureGroup = evt.featureGroup.layer;
+
+		this.options.featureGroup.on('layeradd layerremove', this._checkDisabled, this);
 		this._checkDisabled();
-
-		this._map.fire('draw:featuregroupchanged', {featureGroup: featureGroup.layer, data: featureGroup});
 	},
 
 	disable: function () {
@@ -134,7 +141,7 @@ L.EditToolbar = L.Toolbar.extend({
 
 	_checkDisabled: function () {
 		var featureGroup = this.options.featureGroup,
-			hasLayers = featureGroup.getLayers().length !== 0,
+			hasLayers = featureGroup && featureGroup.getLayers().length !== 0,
 			button;
 
 		if (this.options.edit) {

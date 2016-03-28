@@ -9,13 +9,14 @@ L.DrawToolbar = L.Toolbar.extend({
 		polygon: {},
 		rectangle: {},
 		circle: {},
-		marker: {}
+		marker: {},
+		featureGroup: undefined
 	},
 
 	initialize: function (options) {
 		// Ensure that the options are merged correctly since L.extend is only shallow
 		for (var type in this.options) {
-			if (this.options.hasOwnProperty(type)) {
+			if (this.options.hasOwnProperty(type) && type !== 'featureGroup') {
 				if (options[type]) {
 					options[type] = L.extend({}, this.options[type], options[type]);
 				}
@@ -33,7 +34,7 @@ L.DrawToolbar = L.Toolbar.extend({
 		var modeHandlers = [];
 		
 		for (var toolName in this.options) {
-			if (this.options.hasOwnProperty(toolName)) {
+			if (this.options.hasOwnProperty(toolName) && toolName !== 'featureGroup') {
 				var typeName = toolName[0].toUpperCase() + toolName.substring(1);
 				if (L.Draw[typeName]) {
 					
@@ -87,9 +88,62 @@ L.DrawToolbar = L.Toolbar.extend({
 		L.setOptions(this, options);
 
 		for (var type in this._modes) {
-			if (this._modes.hasOwnProperty(type) && options.hasOwnProperty(type)) {
+			if (this._modes.hasOwnProperty(type) && options.hasOwnProperty(type) && type !== 'featureGroup') {
 				this._modes[type].handler.setOptions(options[type]);
 			}
 		}
+	},
+
+	addToolbar: function (map) {
+
+		var container = L.Toolbar.prototype.addToolbar.call(this, map);
+
+		this._checkDisabled();
+
+		this._map.on('draw:featuregroupchanged', this.setFeatureGroup, this);
+
+		return container;
+
+	},
+
+	setFeatureGroup: function (evt) {
+
+		if (!evt.featureGroup || evt.featureGroup.layer === this.options.featureGroup) {
+			return;
+		}
+
+		this.options.featureGroup = evt.featureGroup;
+
+		this._checkDisabled();
+
+	},
+
+	_checkDisabled: function () {
+
+		var featureGroup = this.options.featureGroup;
+		var	button;
+		var handler;
+
+		for (var type in this._modes) {
+			if (this._modes.hasOwnProperty(type) && type !== 'featureGroup') {
+
+				button = this._modes[type].button;
+				handler = this._modes[type].handler;
+
+				if (featureGroup) {
+					L.DomUtil.removeClass(button, 'leaflet-disabled');
+					button.setAttribute('title', L.drawLocal.draw.toolbar.buttons[type]);
+					L.DomEvent.on(button, 'click', handler.enable, handler);
+				} else {
+					L.DomUtil.addClass(button, 'leaflet-disabled');
+					button.removeAttribute('title');
+					L.DomEvent.off(button, 'click', handler.enable);
+				}
+
+			}
+
+		}
+
 	}
+
 });
